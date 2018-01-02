@@ -160,7 +160,8 @@ extension ViewController {
         showMessage(message: message)
         let insertHFileCount = insertCodeAction(insertCodeFile: insertCodeHFileTF, targetFiles: hFiles, homePath: homePath)
         let insertMFileCount = insertCodeAction(insertCodeFile: insertCodeMFileTF, targetFiles: mFiles, homePath: homePath)
-        showMessage(message: message + "\n" + "头文件插入(.h): \(insertHFileCount)个" + "\n" + "实现文件(.m): \(insertMFileCount)个")
+        let insertSwiftFileCount = insertCodeAction(insertCodeFile: insertCodeSwiftFileTF, targetFiles: swiftFiles, homePath: homePath)
+        showMessage(message: message + "\n" + "头文件插入(.h): \(insertHFileCount)个" + "\n" + "实现文件(.m): \(insertMFileCount)个" + "\n" + "Swift文件(.swift): \(insertSwiftFileCount)")
     }
 
     /// 插入代码实现
@@ -196,20 +197,27 @@ extension ViewController {
             guard var fileContent = fileStr else {
                 continue
             }
-            
-            let suffix = "@end"
-            var originCode = suffix
-            var targetCode = insertCode + suffix
-            if getRevertCodeStatus() {
-                originCode = insertCode + suffix
-                targetCode = suffix
+            if fileNameExten?.hasSuffix(".swift") ?? false {
+                if getRevertCodeStatus() && fileContent.hasSuffix(insertCode) {
+                    fileContent = fileContent.components(separatedBy: insertCode).first!
+                } else if !fileContent.hasSuffix(insertCode) {
+                    fileContent = fileContent.appending(insertCode)
+                }
+            } else {
+                let suffix = "@end"
+                var originCode = suffix
+                var targetCode = insertCode + suffix
+                if getRevertCodeStatus() {
+                    originCode = insertCode + suffix
+                    targetCode = suffix
+                }
+                
+                let replaceRangeOption = fileContent.range(of: originCode, options: String.CompareOptions.backwards)
+                guard let replaceRange = replaceRangeOption else {
+                    continue
+                }
+                fileContent.replaceSubrange(replaceRange, with: targetCode)
             }
-            
-            let replaceRangeOption = fileContent.range(of: originCode, options: String.CompareOptions.backwards)
-            guard let replaceRange = replaceRangeOption else {
-                continue
-            }
-            fileContent.replaceSubrange(replaceRange, with: targetCode)
             try? fileContent.write(toFile: fullPath, atomically: true, encoding: String.Encoding.utf8)
             count += 1
             showMessage(message: "正在插入代码: \(fileNameExten ?? "")")
