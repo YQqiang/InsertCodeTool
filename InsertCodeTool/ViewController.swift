@@ -130,16 +130,28 @@ extension ViewController {
         var fileName: String? = (directoryEnumerator?.nextObject() as! String?)
 //        let fileExtensions: [String] = ["h","m", "swift"]
         
+        /// 不包含的文件夹
+        let ignoreFileFolder = getStringValue(with: ignoreFileTF).components(separatedBy: ",")
+        
         while (fileName != nil) {
-            if let fileExtension = (fileName as NSString?)?.pathExtension {
-                if fileExtension == "h" {
-                    hFiles.append(fileName!)
+            var contains = false
+            for pathComp in (fileName as NSString?)?.pathComponents ?? [String]() {
+                 contains = ignoreFileFolder.contains(pathComp)
+                if contains {
+                    break
                 }
-                if fileExtension == "m" {
-                    mFiles.append(fileName!)
-                }
-                if fileExtension == "swift" {
-                    swiftFiles.append(fileName!)
+            }
+            if !contains {
+                if let fileExtension = (fileName as NSString?)?.pathExtension {
+                    if fileExtension == "h" {
+                        hFiles.append(fileName!)
+                    }
+                    if fileExtension == "m" {
+                        mFiles.append(fileName!)
+                    }
+                    if fileExtension == "swift" {
+                        swiftFiles.append(fileName!)
+                    }
                 }
             }
             fileName = (directoryEnumerator?.nextObject() as! String?)
