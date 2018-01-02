@@ -54,6 +54,7 @@ class ViewController: NSViewController {
     
     /// 确定插入代码
     @IBOutlet weak var confirmInsertBTN: NSButton!
+    @IBOutlet weak var progressIndicator: NSProgressIndicator!
     
     /// 信息提示
     @IBOutlet weak var messageLAB: NSTextField!
@@ -61,6 +62,7 @@ class ViewController: NSViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        progressIndicator.isHidden = true
     }
     
 }
@@ -88,6 +90,7 @@ extension ViewController {
     }
     
     @IBAction func revertCodeBTNAction(_ sender: NSButton) {
+        confirmInsertBTN.title = sender.state == .on ? "确定删除已插入代码" : "确定插入代码"
     }
     
     @IBAction func confirmInsertBTNAction(_ sender: NSButton) {
@@ -96,14 +99,15 @@ extension ViewController {
             return
         }
         if (insertCodeHFileTF.placeholderString == nil || insertCodeHFileTF.placeholderString?.count == 0) && (insertCodeMFileTF.placeholderString == nil || insertCodeMFileTF.placeholderString?.count == 0) && (insertCodeSwiftFileTF.placeholderString == nil || insertCodeSwiftFileTF.placeholderString?.count == 0) {
-            showMessage(message: "(.h .m .swift)至少需要选择一个带插入代码文件")
+            showMessage(message: "(.h .m .swift)至少需要选择一个待插入代码文件")
             return
         }
-        
+        startExecute()
         let path = projectFileTF.placeholderString!
         DispatchQueue.global().async {
             self.readFiles(path: path)
         }
+        endExecute()
     }
     
 }
@@ -140,11 +144,24 @@ extension ViewController {
             }
             fileName = (directoryEnumerator?.nextObject() as! String?)
         }
-        var message = "--------供检索出文件:\(hFiles.count + mFiles.count + swiftFiles.count)个 ------- \n--------头文件(.h):\(hFiles.count)个 ------- \n--------实现文件(.m):\(mFiles.count)个 ------- \n--------Swift文件(.swift):\(swiftFiles.count)个 ------- \n"
+        let message = "供检索出文件:\(hFiles.count + mFiles.count + swiftFiles.count)个 \n头文件(.h):\(hFiles.count)个\n实现文件(.m):\(mFiles.count)个\nSwift文件(.swift):\(swiftFiles.count)个\n"
         showMessage(message: message)
-        var count: Int = 0
-        
-        for (index, filePath) in mFiles.enumerated() {
+        let insertHFileCount = insertCodeAction(insertCodeFile: insertCodeHFileTF, targetFiles: hFiles, homePath: homePath)
+        let insertMFileCount = insertCodeAction(insertCodeFile: insertCodeMFileTF, targetFiles: mFiles, homePath: homePath)
+        showMessage(message: message + "\n" + "头文件插入(.h): \(insertHFileCount)个" + "\n" + "实现文件(.m): \(insertMFileCount)个")
+    }
+
+    /// 插入代码实现
+    ///
+    /// - Parameters:
+    ///   - insertCodeFile: 待插入代码的文件
+    ///   - targetFiles: 目标代码文件数组
+    ///   - homePath: 主目录
+    /// - Returns: 已插入的文件数量
+    @discardableResult
+    fileprivate func insertCodeAction(insertCodeFile: NSTextField, targetFiles: [String], homePath: String) -> Int {
+        var count = 0
+        for (_, filePath) in targetFiles.enumerated() {
             guard canInsertCode() else {
                 continue
             }
@@ -153,7 +170,7 @@ extension ViewController {
             // 准备插入的代码内容
             var insertCodePath = ""
             DispatchQueue.main.sync {
-                insertCodePath = self.insertCodeMFileTF.placeholderString ?? ""
+                insertCodePath = insertCodeFile.placeholderString ?? ""
             }
             guard insertCodePath.count > 0 else {
                 continue
@@ -182,16 +199,18 @@ extension ViewController {
             }
             fileContent.replaceSubrange(replaceRange, with: targetCode)
             try? fileContent.write(toFile: fullPath, atomically: true, encoding: String.Encoding.utf8)
-            message = "\n 正在替换第\(index)个文件"
-            showMessage(message: message)
-            if canInsertCode() {
-                count += 1
-            }
-            print("-----count = \(count)")
+            count += 1
+            showMessage(message: "正在插入代码: \(fileNameExten ?? "")")
         }
-        count = hFiles.count
+        return count
     }
     
+    /// 获取替换前缀后的带插入代码文件内容
+    ///
+    /// - Parameters:
+    ///   - path: 待插入代码文件路径
+    ///   - fileName: 目标插入代码的文件名称
+    /// - Returns: 插入代码内容
     fileprivate func insertCode(with path: String?, fileName: String) -> String? {
         guard let p = path else {
             return nil
@@ -206,6 +225,9 @@ extension ViewController {
         return content
     }
     
+    /// 获取操作执行状态: 插入代码 or 删除已插入代码
+    ///
+    /// - Returns: 插入代码 or 删除已插入代码
     fileprivate func getRevertCodeStatus() -> Bool {
         var status = false
         DispatchQueue.main.sync {
@@ -214,6 +236,10 @@ extension ViewController {
         return status
     }
     
+    /// 在主线程获取 `NSTextField` 的 `stringValue`
+    ///
+    /// - Parameter textField:
+    /// - Returns:
     fileprivate func getStringValue(with textField: NSTextField) -> String {
         var stringValue = ""
         DispatchQueue.main.sync {
@@ -250,6 +276,24 @@ extension ViewController {
             return path?.expandingTildeInPath ?? ""
         }
         return ""
+    }
+    
+    /// 开始执行
+    fileprivate func startExecute() {
+        confirmInsertBTN.isEnabled = false
+        DispatchQueue.main.async {
+            self.progressIndicator.isHidden = false
+            self.progressIndicator.startAnimation(nil)
+        }
+    }
+    
+    /// 结束执行
+    fileprivate func endExecute() {
+        confirmInsertBTN.isEnabled = true
+        DispatchQueue.main.async {
+            self.progressIndicator.isHidden = true
+            self.progressIndicator.stopAnimation(nil)
+        }
     }
     
     /// 显示提示信息

@@ -908,11 +908,16 @@
                                             <action selector="confirmInsertBTNAction:" target="XfG-lQ-9wD" id="mXt-RU-fjV"/>
                                         </connections>
                                     </button>
+                                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="f80-rc-Apq">
+                                        <rect key="frame" x="162" y="11" width="16" height="16"/>
+                                    </progressIndicator>
                                 </subviews>
                                 <constraints>
                                     <constraint firstAttribute="bottom" secondItem="Rl6-BY-ZqC" secondAttribute="bottom" constant="8" id="1uq-lt-T2v"/>
+                                    <constraint firstItem="Rl6-BY-ZqC" firstAttribute="leading" secondItem="f80-rc-Apq" secondAttribute="trailing" constant="8" id="P65-ht-jy5"/>
                                     <constraint firstItem="Rl6-BY-ZqC" firstAttribute="centerX" secondItem="ejO-6d-CF6" secondAttribute="centerX" id="rtK-AV-oYN"/>
                                     <constraint firstItem="Rl6-BY-ZqC" firstAttribute="top" secondItem="ejO-6d-CF6" secondAttribute="top" constant="8" id="umT-92-y6F"/>
+                                    <constraint firstItem="f80-rc-Apq" firstAttribute="centerY" secondItem="Rl6-BY-ZqC" secondAttribute="centerY" id="z7U-xc-8HV"/>
                                 </constraints>
                             </customView>
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="7Mr-mN-eQy">
@@ -1088,6 +1093,7 @@
                         <outlet property="insertPresentS" destination="0aP-KC-YiW" id="Lbl-7y-sEG"/>
                         <outlet property="messageLAB" destination="1y3-vH-oGJ" id="S9U-f5-uW6"/>
                         <outlet property="originPrefixTF" destination="iqV-TZ-RIl" id="7QM-li-wll"/>
+                        <outlet property="progressIndicator" destination="f80-rc-Apq" id="CkK-51-0uS"/>
                         <outlet property="projectFileBTN" destination="FuI-MO-O9h" id="d6e-6W-YXH"/>
                         <outlet property="projectFileTF" destination="frA-hr-azq" id="D8Q-md-A5S"/>
                         <outlet property="revertCodeBTN" destination="ips-y6-t3p" id="pjA-5P-rJI"/>
