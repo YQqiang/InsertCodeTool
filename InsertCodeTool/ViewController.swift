@@ -200,7 +200,7 @@ extension ViewController {
             if fileNameExten?.hasSuffix(".swift") ?? false {
                 if getRevertCodeStatus() && fileContent.hasSuffix(insertCode) {
                     fileContent = fileContent.components(separatedBy: insertCode).first!
-                } else if !fileContent.hasSuffix(insertCode) {
+                } else if !getRevertCodeStatus() && !fileContent.hasSuffix(insertCode) {
                     fileContent = fileContent.appending(insertCode)
                 }
             } else {
